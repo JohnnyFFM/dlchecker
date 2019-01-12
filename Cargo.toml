@@ -1,0 +1,14 @@
+[package]
+name = "dl_checker"
+version = "0.1.0"
+authors = ["JohnnyFFM <JohnnyDeluxe@habmalnefrage.de>"]
+edition = "2018"
+
+[dependencies]
+futures = "0.1.25"
+hyper = "0.12.20"
+hyper-tls = "0.3.1"
+serde = "1.0.84"
+serde_derive = "1.0.84"
+serde_json = "1.0.34"
+tokio-core = "0.1.17"
