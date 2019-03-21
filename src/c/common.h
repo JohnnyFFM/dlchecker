@@ -6,12 +6,6 @@
 
 #include <stdlib.h>
 
-#define SET_BEST_DEADLINE(d, o) \
-    if ((d) < *best_deadline) { \
-        *best_deadline = (d);   \
-        *best_offset = (o);     \
-    }
-    
 #define bswap_32(x) _byteswap_ulong(x)
 #define bswap_64(x) _byteswap_uint64(x)
 
@@ -54,6 +48,12 @@
 #include <byteswap.h>
 
 #endif
+
+#define SET_BEST_DEADLINE(d, o) \
+    if ((d) < *best_deadline) { \
+        *best_deadline = (d);   \
+        *best_offset = (o);     \
+    }
 
 #define HASH_SIZE 32
 #define HASH_CAP 4096
