@@ -75,17 +75,31 @@ fn main() {
                 .required(false)
                 .takes_value(true),
         )
+        .arg(
+            Arg::with_name("walleturl")
+                .short("w")
+                .long("wallet")
+                .value_name("wallet url")
+                .help("wallet url including protocol (eg. https://burst.megash.it/)")
+                .required(false)
+                .takes_value(true),
+        )
         .get_matches();
     let numeric_id = value_t!(matches, "id", u64).unwrap_or_else(|e| e.exit());
     let height = value_t!(matches, "height", u64).unwrap_or_else(|e| e.exit());
     let nonce = value_t!(matches, "nonce", u64).unwrap_or_else(|e| e.exit());
     let plotfile = value_t!(matches, "plotfile", String).unwrap_or_else(|_| "".to_owned());
 
+    let walleturl = value_t!(matches, "walleturl", String).unwrap_or_else(|_| {
+        "https://wallet.burst.cryptoguru.org".to_string()
+    });
+
     println!("Block Height         : {}", height);
     println!("Numeric ID           : {}", numeric_id);
     println!("Nonce                : {}", nonce);
-    let blockinfo = get_blockinfo(height);
-    let blockinfo_prev = get_blockinfo(height - 1);
+    println!("Wallet Url           : {}", walleturl);
+    let blockinfo = get_blockinfo(height, walleturl.clone());
+    let blockinfo_prev = get_blockinfo(height - 1, walleturl.clone());
 
     println!("Generation Signature : {}", blockinfo.generation_signature);
     println!("Base Target          : {}", blockinfo_prev.base_target);

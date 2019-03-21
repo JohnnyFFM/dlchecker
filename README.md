@@ -13,10 +13,11 @@ FLAGS:
     -V, --version    Prints version information
 
 OPTIONS:
-    -h, --height <height>    block height
-    -i, --numeric_id <id>    numeric id
-    -n, --nonce <nonce>      nonce
-    -f, --file <plotfile>    plot file <optional>
+    -h, --height <height>        block height
+    -i, --numeric_id <id>        numeric id
+    -n, --nonce <nonce>          nonce
+    -f, --file <plotfile>        plot file
+    -w, --wallet <wallet url>    wallet url including protocol (eg. https://burst.megash.it/)
 ```
 
 
@@ -24,6 +25,7 @@ OPTIONS:
 Block Height         : 577152
 Numeric ID           : 10790126960500947771
 Nonce                : 221298176
+Wallet Url           : https://wallet.burst.cryptoguru.org
 Generation Signature : 2da542fb89b15a80619a858493ac79e0a3a42056ed6c8bdb3ac97b0fb16b52f1
 Base Target          : 70910
 Net Difficulty       : 258428

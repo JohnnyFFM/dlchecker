@@ -18,10 +18,10 @@ pub struct BlockInfo {
     pub base_target: u64,
 }
 
-pub fn get_blockinfo(height: u64) -> BlockInfo {
+pub fn get_blockinfo(height: u64, walleturl: String) -> BlockInfo {
     let https = hyper_tls::HttpsConnector::new(4).unwrap();
     let client = hyper::Client::builder().build::<_, hyper::Body>(https);
-    let url = "https://wallet.burst.cryptoguru.org/burst?requestType=getBlock&height=".to_owned()
+    let url = walleturl + &"/burst?requestType=getBlock&height=".to_owned()
         + &height.to_string();
     let fut = client
         .get(url.parse().unwrap())
