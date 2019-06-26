@@ -3,38 +3,19 @@ extern crate serde_derive;
 #[macro_use]
 extern crate clap;
 
-mod burstmath;
+mod poc_hashing;
 mod network;
-mod shabals;
+mod shabal256;
 
 use crate::network::get_blockinfo;
 use clap::AppSettings::ArgRequiredElseHelp;
 use clap::{App, Arg};
 use hex;
-use libc::{c_void, size_t, uint64_t};
 use std::fs;
 use std::fs::OpenOptions;
 use std::io::{Read, Seek, SeekFrom};
 use std::path::Path;
 use std::u64;
-
-extern "C" {
-    pub fn noncegen(
-        cache: *mut c_void,
-        cache_size: size_t,
-        chunk_offset: size_t,
-        numeric_ID: uint64_t,
-        local_startnonce: uint64_t,
-        local_nonces: uint64_t,
-    );
-    pub fn find_best_deadline_sph(
-        scoops: *mut c_void,
-        nonce_count: uint64_t,
-        gensig: *const c_void,
-        best_deadline: *mut uint64_t,
-        best_offset: *mut uint64_t,
-    ) -> ();
-}
 
 fn main() {
     let matches = App::new("Deadliner Checker")
@@ -48,7 +29,8 @@ fn main() {
                 .long("height")
                 .value_name("height")
                 .help("block height")
-                .takes_value(true),
+                .takes_value(true)
+                .required(true),
         )
         .arg(
             Arg::with_name("id")
@@ -56,7 +38,8 @@ fn main() {
                 .long("numeric_id")
                 .value_name("id")
                 .help("numeric id")
-                .takes_value(true),
+                .takes_value(true)
+                .required(true),
         )
         .arg(
             Arg::with_name("nonce")
@@ -64,7 +47,8 @@ fn main() {
                 .long("nonce")
                 .value_name("nonce")
                 .help("nonce")
-                .takes_value(true),
+                .takes_value(true)
+                .required(true),
         )
         .arg(
             Arg::with_name("plotfile")
@@ -107,16 +91,13 @@ fn main() {
         "Net Difficulty       : {}",
         4398046511104 / 240 / blockinfo_prev.base_target
     );
-    let gensig = burstmath::decode_gensig(&blockinfo.generation_signature);
-    let scoop = burstmath::calculate_scoop(height, &gensig);
+    let gensig = poc_hashing::decode_gensig(&blockinfo.generation_signature);
+    let scoop = poc_hashing::calculate_scoop(height, &gensig);
     println!("Scoop                : {}", scoop);
 
     //plot
-    let cache = vec![0u8; 262144];
-
-    unsafe {
-        noncegen(cache.as_ptr() as *mut c_void, 1, 0, numeric_id, nonce, 1);
-    }
+    let mut cache = vec![0u8; 262144];
+    poc_hashing::noncegen_rust(&mut cache[..], numeric_id, nonce, 1);
     let address = 64 * scoop as usize;
 
     println!(
@@ -125,7 +106,7 @@ fn main() {
     );
 
     println!(
-        "Hash 2: (PoC2)       : {:x?}",
+        "Hash 2: (PoC1)       : {:x?}",
         &hex::encode(&cache[address + 32..address + 64])
     );
 
@@ -133,12 +114,10 @@ fn main() {
     let mirroraddress = 64 * mirrorscoop as usize;
 
     println!(
-        "Hash 2: (PoC1)       : {:x?}",
+        "Hash 2: (PoC2)       : {:x?}",
         &hex::encode(&cache[mirroraddress + 32..mirroraddress + 64])
     );
 
-    let mut deadline: u64 = u64::MAX;
-    let mut offset: u64 = 0;
     let mut scoopdata = vec![0u8; 64];
     scoopdata.clone_from_slice(&cache[address..address + 64]);
 
@@ -146,33 +125,25 @@ fn main() {
     mirrorscoopdata[0..32].clone_from_slice(&cache[address..address + 32]);
     mirrorscoopdata[32..64].clone_from_slice(&cache[mirroraddress + 32..mirroraddress + 64]);
 
-    unsafe {
-        find_best_deadline_sph(
-            mirrorscoopdata.as_ptr() as *mut c_void,
-            1,
-            gensig.as_ptr() as *const c_void,
-            &mut deadline,
-            &mut offset,
-        );
-    }
+    let (deadline, _) = poc_hashing::find_best_deadline_rust(
+        &scoopdata[..],
+        1,
+        &gensig,
+    );
+
     println!("Deadline PoC1 (raw)  : {}", deadline);
     println!(
         "Deadline PoC1 (adj)  : {}",
         deadline / blockinfo_prev.base_target
     );
 
-    deadline = u64::MAX;
-    offset = 0;
 
-    unsafe {
-        find_best_deadline_sph(
-            scoopdata.as_ptr() as *mut c_void,
-            1,
-            gensig.as_ptr() as *const c_void,
-            &mut deadline,
-            &mut offset,
-        );
-    }
+    let (deadline, _) = poc_hashing::find_best_deadline_rust(
+        &mirrorscoopdata[..],
+        1,
+        &gensig,
+    );
+
     println!("Deadline PoC2 (raw)  : {}", deadline);
     println!(
         "Deadline PoC2 (adj)  : {}",
@@ -251,36 +222,24 @@ fn main() {
             &hex::encode(&mirrorscoopdata[32..64])
         );
 
-        deadline = u64::MAX;
-        offset = 0;
+        let (deadline, _) = poc_hashing::find_best_deadline_rust(
+            &mirrorscoopdata[..],
+            1,
+            &gensig,
+        );
 
-        unsafe {
-            find_best_deadline_sph(
-                scoopdata.as_ptr() as *mut c_void,
-                1,
-                gensig.as_ptr() as *const c_void,
-                &mut deadline,
-                &mut offset,
-            );
-        }
         println!("Deadline 1 (raw)     : {}", deadline);
         println!(
             "Deadline 1 (adj)     : {}",
             deadline / blockinfo_prev.base_target
         );
 
-        deadline = u64::MAX;
-        offset = 0;
+        let (deadline, _) = poc_hashing::find_best_deadline_rust(
+            &scoopdata[..],
+            1,
+            &gensig,
+        );
 
-        unsafe {
-            find_best_deadline_sph(
-                mirrorscoopdata.as_ptr() as *mut c_void,
-                1,
-                gensig.as_ptr() as *const c_void,
-                &mut deadline,
-                &mut offset,
-            );
-        }
         println!("Deadline 2 (raw)     : {}", deadline);
         println!(
             "Deadline 2 (adj)     : {}",

@@ -55,6 +55,5 @@ where
             Ok(v)
         }
     }
-
     deserializer.deserialize_any(StringOrIntVisitor)
 }
