@@ -7,8 +7,10 @@ mod dlcheck;
 mod network;
 mod poc_hashing;
 mod shabal256;
+mod extract;
 
 use crate::dlcheck::dlcheck;
+use crate::extract::{WalletType, extract};
 use clap::AppSettings::{ArgRequiredElseHelp, DeriveDisplayOrder, SubcommandRequiredElseHelp};
 use clap::{App, Arg, SubCommand};
 
@@ -80,8 +82,7 @@ fn main() {
                     .long("wallet")
                     .value_name("wallet url/db")
                     .help("wallet url including protocol and path (eg. http://localhost:8125/burst) or database location")
-                    .default_value("http://localhost:8125/burst")
-                    .required(false)
+                    .required(true)
                     .takes_value(true),
             )
             .arg(
@@ -89,44 +90,46 @@ fn main() {
                     .short("t")
                     .long("type")
                     .value_name("wallet_type")
-                    .help("wallet type: burst-http (default), btc-rpc, database")
-                    .possible_values(&["burst-http", "bhd-rpc", "database"])
-                    .default_value("burst-http")
+                    .help("wallet type")
+                    .possible_values(&WalletType::variants())
                     .takes_value(true)
-                    .required(false),
+                    .required(true),
             )
             .arg(
                 Arg::with_name("cookie")
                     .short("c")
                     .long("cookie")
                     .value_name("authentication cookie")
-                    .help("path to .cookie (for bhd-rpc)")
+                    .help("path to .cookie (for BhdRpc)")
                     .takes_value(true)
                     .conflicts_with_all(&["username", "password"])
-                    .required_if("server_type", "bhd-rpc"),
+                    .required_if("server_type", &WalletType::BhdRpc.to_string()),
             )
             .arg(
                 Arg::with_name("username")
                     .short("u")
                     .long("user")
                     .value_name("username")
-                    .help("username (for bhd-rpc)")
+                    .help("username (for BurstDB)")
                     .takes_value(true)
-                    .required_if("server_type", "database"),
+                    .required_if("server_type", &WalletType::BurstDB.to_string()),
             )
             .arg(
                 Arg::with_name("pass")
                     .short("p")
                     .long("password")
                     .value_name("password")
-                    .help("password (for bhd-rpc)")
+                    .help("password (for BurstDB)")
                     .takes_value(true)
-                    .required_if("server_type", "database"),
+                    .required_if("server_type", &WalletType::BurstDB.to_string()),
             )
         )
         .get_matches();
 
     if let Some(matches) = matches.subcommand_matches("check") {
         dlcheck(matches);
+    }
+    if let Some(matches) = matches.subcommand_matches("extract") {
+        extract(matches);
     }
 }
