@@ -1,3 +1,4 @@
+use crate::extract_bhdrpc::extract_bhdrpc;
 arg_enum!{
     #[derive(Debug)]
     pub enum WalletType {
@@ -16,6 +17,7 @@ pub fn extract(matches: &clap::ArgMatches) {
         WalletType::BurstDB => {
         },
         WalletType::BhdRpc => {
+            extract_bhdrpc(matches)
         },
     }   
 }

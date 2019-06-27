@@ -8,6 +8,7 @@ mod network;
 mod poc_hashing;
 mod shabal256;
 mod extract;
+mod extract_bhdrpc;
 
 use crate::dlcheck::dlcheck;
 use crate::extract::{WalletType, extract};
