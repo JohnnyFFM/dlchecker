@@ -1,6 +1,6 @@
 [package]
-name = "dl_checker"
-version = "0.1.0"
+name = "poc_checker"
+version = "0.2.0"
 authors = ["JohnnyFFM <JohnnyDeluxe@habmalnefrage.de>"]
 edition = "2018"
 
