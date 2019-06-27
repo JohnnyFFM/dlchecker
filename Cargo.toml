@@ -15,3 +15,10 @@ serde_derive = "1.0.84"
 serde_json = "1.0.34"
 tokio-core = "0.1.17"
 jsonrpc = "0.11.0"
+csv = "1.1.0"
+pbr = "1.0.1"
+
+[features]
+default = ["opencl", "simd"]
+opencl = []
+simd = []
