@@ -9,8 +9,10 @@ mod extract_bhdrpc;
 mod network;
 mod poc_hashing;
 mod shabal256;
+mod verify;
 
 use crate::dlcheck::dlcheck;
+use crate::verify::verify;
 use crate::extract::{extract, WalletType};
 use clap::AppSettings::{ArgRequiredElseHelp, DeriveDisplayOrder, SubcommandRequiredElseHelp};
 use clap::{App, Arg, SubCommand};
@@ -124,6 +126,56 @@ fn main() {
                     .takes_value(true)
                     .required_if("server_type", &WalletType::BurstDB.to_string()),
             )
+        ).subcommand(
+            SubCommand::with_name("verify")
+                .about("Verifies a PoC blockchain from a .csv file")
+                .setting(ArgRequiredElseHelp)
+                .setting(DeriveDisplayOrder)
+            .arg(
+                Arg::with_name("csv_file")
+                    .short("c")
+                    .long("csv")
+                    .value_name("csv_file")
+                    .help("blockchain .csv file")
+                    .required(true)
+                    .takes_value(true),
+            )
+        ).subcommand(
+            SubCommand::with_name("investigate")
+                .about("Scan a PoC blockchain from a .csv file for suspicious activity")
+                .setting(ArgRequiredElseHelp)
+                .setting(DeriveDisplayOrder)
+            .arg(
+                Arg::with_name("csv_file")
+                    .short("c")
+                    .long("csv")
+                    .value_name("csv_file")
+                    .help("blockchain .csv file")
+                    .required(true)
+                    .takes_value(true),
+            )
+        ).subcommand(
+            SubCommand::with_name("vipminer")
+                .about("Scan a closed source wallet exe for hardcoded block forgers' numeric IDs")
+                .setting(ArgRequiredElseHelp)
+                .setting(DeriveDisplayOrder)
+            .arg(
+                Arg::with_name("csv_file")
+                    .short("c")
+                    .long("csv")
+                    .value_name("csv_file")
+                    .help("blockchain .csv file")
+                    .required(true)
+                    .takes_value(true),
+            ).arg(
+                Arg::with_name("exe_file")
+                    .short("e")
+                    .long("exe")
+                    .value_name("exe_file")
+                    .help("wallet .exe file")
+                    .required(true)
+                    .takes_value(true),
+            )
         )
         .get_matches();
 
@@ -132,5 +184,8 @@ fn main() {
     }
     if let Some(matches) = matches.subcommand_matches("extract") {
         extract(matches);
+    }
+    if let Some(matches) = matches.subcommand_matches("verify") {
+        verify(matches);
     }
 }

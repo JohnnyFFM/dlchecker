@@ -29,6 +29,18 @@ pub fn calculate_scoop(height: u64, gensig: &[u8; 32]) -> u32 {
     (u32::from(new_gensig[30] & 0x0F) << 8) | u32::from(new_gensig[31])
 }
 
+pub fn calculate_new_gensig(generator: u64, gensig: &[u8; 32]) -> [u8; 32] {
+    let mut data: [u8; 64] = [0; 64];
+    let generator_bytes: [u8; 8] = unsafe { transmute(generator.to_be()) };
+
+    data[..32].clone_from_slice(gensig);
+    data[32..40].clone_from_slice(&generator_bytes);
+    data[40] = 0x80;
+    let data = unsafe { std::mem::transmute::<&[u8; 64], &[u32; 16]>(&data) };
+
+    shabal256_hash_fast(&[], &data)
+}
+
 pub fn find_best_deadline_rust(
     data: &[u8],
     number_of_nonces: u64,

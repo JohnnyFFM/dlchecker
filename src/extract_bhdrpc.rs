@@ -43,6 +43,7 @@ pub struct Block {
     #[serde(rename = "generationSignature")]
     generation_signature: String, 
     deadline: u64,
+    #[serde(skip_serializing)]
     generator: String, 
     #[serde(skip_serializing)]
     previousblockhash: String,
@@ -87,7 +88,7 @@ pub fn extract_bhdrpc(matches: &clap::ArgMatches) {
     let mut pb = ProgressBar::new(blockcount);
     pb.format("│██░│");
     pb.set_width(Some(80));
-    pb.message("Extracting: ");
+    pb.message("Extracting : ");
 
     // extract blocks
     for i in 0..blockcount as u64 {
