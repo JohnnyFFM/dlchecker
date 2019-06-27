@@ -41,14 +41,14 @@ pub struct Block {
     plotter_id: u64,
     nonce: u64,
     #[serde(rename = "generationSignature")]
-    generation_signature: String, 
+    generation_signature: String,
     deadline: u64,
     #[serde(skip_serializing)]
-    generator: String, 
+    generator: String,
     #[serde(skip_serializing)]
     previousblockhash: String,
     #[serde(skip_serializing)]
-    nextblockhash: String,        
+    nextblockhash: String,
 }
 
 pub fn extract_bhdrpc(matches: &clap::ArgMatches) {
@@ -80,8 +80,8 @@ pub fn extract_bhdrpc(matches: &clap::ArgMatches) {
     };
     println!("Blockcount : {}", blockcount);
 
-    // initialise write  
-    let filename = format!("bhd_{}.csv",blockcount);
+    // initialise write
+    let filename = format!("bhd_{}.csv", blockcount);
     println!("Filename   : {}", &filename);
     let mut wtr = csv::Writer::from_path(&filename).unwrap();
 
@@ -117,7 +117,8 @@ pub fn extract_bhdrpc(matches: &clap::ArgMatches) {
             }
         };
         // export to csv
-        wtr.serialize(block).expect("error deserialising block info");
+        wtr.serialize(block)
+            .expect("error deserialising block info");
         pb.inc();
     }
     pb.finish_print("done.");

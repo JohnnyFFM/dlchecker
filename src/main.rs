@@ -12,8 +12,8 @@ mod shabal256;
 mod verify;
 
 use crate::dlcheck::dlcheck;
-use crate::verify::verify;
 use crate::extract::{extract, WalletType};
+use crate::verify::verify;
 use clap::AppSettings::{ArgRequiredElseHelp, DeriveDisplayOrder, SubcommandRequiredElseHelp};
 use clap::{App, Arg, SubCommand};
 
