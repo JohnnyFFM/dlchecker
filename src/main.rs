@@ -4,14 +4,14 @@ extern crate serde_derive;
 extern crate clap;
 
 mod dlcheck;
+mod extract;
+mod extract_bhdrpc;
 mod network;
 mod poc_hashing;
 mod shabal256;
-mod extract;
-mod extract_bhdrpc;
 
 use crate::dlcheck::dlcheck;
-use crate::extract::{WalletType, extract};
+use crate::extract::{extract, WalletType};
 use clap::AppSettings::{ArgRequiredElseHelp, DeriveDisplayOrder, SubcommandRequiredElseHelp};
 use clap::{App, Arg, SubCommand};
 
