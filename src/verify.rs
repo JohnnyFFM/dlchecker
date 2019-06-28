@@ -61,7 +61,6 @@ pub fn verify(matches: &clap::ArgMatches) {
         blocks_decoded.push(block);
     }
 
-
     let mut pb = ProgressBar::new(blocks_decoded.len() as u64 - 84002);
     pb.format("│██░│");
     pb.set_width(Some(80));
@@ -82,8 +81,11 @@ pub fn verify(matches: &clap::ArgMatches) {
         let gensig_ok = hex::encode(&gensig) == blocks_decoded[i].generation_signature;
         if !gensig_ok {
             println!(
-                "Gensig Validation Error detected, Height = {}",
-                blocks_decoded[i].height
+                "{: <80}",
+                format!(
+                    "\rGensig Validation Error detected, Height = {}",
+                    blocks_decoded[i].height
+                )
             );
         }
 
@@ -109,10 +111,13 @@ pub fn verify(matches: &clap::ArgMatches) {
         let (deadline, _) = find_best_deadline_rust(&poc2scoopdata[..], 1, &gensig);
         let deadline_adj = deadline / blocks_decoded[i - 1].base_target;
         let poc_ok = deadline_adj == blocks_decoded[i].deadline;
-        if  !poc_ok{
+        if !poc_ok {
             println!(
-                "Deadline Validation Error detected, Height = {}",
-                blocks_decoded[i].height
+                "{: <80}",
+                format!(
+                    "\rDeadline Validation Error detected, Height = {}",
+                    blocks_decoded[i].height
+                )
             );
         }
         let mut pb = pb.lock().unwrap();
