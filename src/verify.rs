@@ -88,9 +88,10 @@ pub fn verify(matches: &clap::ArgMatches) {
                 )
             );
         }
+        let gensig_chain = decode_gensig(&blocks_decoded[i].generation_signature);
 
         // verify PoC
-        let scoop = calculate_scoop(blocks_decoded[i].height, &gensig);
+        let scoop = calculate_scoop(blocks_decoded[i].height, &gensig_chain);
 
         //plot
         let mut cache = vec![0u8; 262144];
@@ -108,7 +109,7 @@ pub fn verify(matches: &clap::ArgMatches) {
         poc2scoopdata[0..32].clone_from_slice(&cache[address..address + 32]);
         poc2scoopdata[32..64].clone_from_slice(&cache[mirroraddress + 32..mirroraddress + 64]);
 
-        let (deadline, _) = find_best_deadline_rust(&poc2scoopdata[..], 1, &gensig);
+        let (deadline, _) = find_best_deadline_rust(&poc2scoopdata[..], 1, &gensig_chain);
         let deadline_adj = deadline / blocks_decoded[i - 1].base_target;
         let poc_ok = deadline_adj == blocks_decoded[i].deadline;
         if !poc_ok {
