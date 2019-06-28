@@ -129,7 +129,7 @@ pub fn verify(matches: &clap::ArgMatches) {
             height: blocks_decoded[i].height,
             scoop: scoop as u64,
             deadline: deadline_adj,
-            elapsed: blocks_decoded[i - 1].time - blocks_decoded[i].time,
+            elapsed: blocks_decoded[i].time - blocks_decoded[i-1].time,
             gensig_ok,
             poc_ok,
         };
