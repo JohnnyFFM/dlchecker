@@ -3,6 +3,7 @@ use crate::poc_hashing::{
 };
 use pbr::ProgressBar;
 use rayon::prelude::*;
+use std::sync::{Arc, Mutex};
 
 #[serde(default)]
 #[derive(Serialize, Deserialize, Default, Debug)]
@@ -22,9 +23,12 @@ pub struct Block {
 #[serde(default)]
 #[derive(Serialize, Deserialize, Default, Debug)]
 pub struct Info {
+    height: u64,
     scoop: u64,
     deadline: u64,
     elapsed: u64,
+    gensig_ok: bool,
+    poc_ok: bool,
 }
 
 pub fn verify(matches: &clap::ArgMatches) {
@@ -35,12 +39,13 @@ pub fn verify(matches: &clap::ArgMatches) {
 
     // Replace the range up until the β from the string
     let mut filename2 = filename.clone();
-    filename2.replace_range(offset.., "_scoop_dl.csv");
+    filename2.replace_range(offset.., "_analysis.csv");
 
     println!("Input      : {}", &filename);
     println!("Output     : {}", &filename2);
     let mut rdr = csv::Reader::from_path(&filename).unwrap();
-    let mut wtr = csv::Writer::from_path(&filename2).unwrap();
+    let wtr = csv::Writer::from_path(&filename2).unwrap();
+    let wtr = Arc::new(Mutex::new(wtr));
 
     let blocks = rdr
         .records()
@@ -56,12 +61,12 @@ pub fn verify(matches: &clap::ArgMatches) {
         blocks_decoded.push(block);
     }
 
-    let mut pass = true;
-    let mut pass2 = true;
+
     let mut pb = ProgressBar::new(blocks_decoded.len() as u64 - 84002);
     pb.format("│██░│");
     pb.set_width(Some(80));
     pb.message("Verifying : ");
+    let pb = Arc::new(Mutex::new(pb));
 
     //for i in 1..blocks_decoded.len() {
     (84002..blocks_decoded.len()).into_par_iter().for_each(|i| {
@@ -74,22 +79,12 @@ pub fn verify(matches: &clap::ArgMatches) {
         let gensig = calculate_new_gensig(last_generator, &last_gensig);
         //println!("Gensig calced from prev block : {}",  &hex::encode(&gensig));
         //println!("Gensig stored in chain        : {}", blocks_decoded[i].generation_signature);
-        if hex::encode(&gensig) != blocks_decoded[i].generation_signature {
-            if pass {
-                pass = false;
-                println!(
-                    "Gensig Validation Error detected, StartHeight = {}",
-                    blocks_decoded[i].height
-                );
-            }
-        } else {
-            if !pass {
-                println!(
-                    "Gensig Validation Error detected, EndHeight = {}",
-                    blocks_decoded[i].height
-                );
-                pass = true;
-            }
+        let gensig_ok = hex::encode(&gensig) == blocks_decoded[i].generation_signature;
+        if gensig_ok {
+            println!(
+                "Gensig Validation Error detected, Height = {}",
+                blocks_decoded[i].height
+            );
         }
 
         // verify PoC
@@ -113,47 +108,30 @@ pub fn verify(matches: &clap::ArgMatches) {
 
         let (deadline, _) = find_best_deadline_rust(&poc2scoopdata[..], 1, &gensig);
         let deadline_adj = deadline / blocks_decoded[i - 1].base_target;
-        if deadline_adj != blocks_decoded[i].deadline {
-            if pass2 {
-                pass2 = false;
-                println!(
-                    "Deadline Validation Error detected, StartHeight = {}",
-                    blocks_decoded[i].height
-                );
-            }
-        } else {
-            if !pass2 {
-                println!(
-                    "Deadline Validation Error detected, EndHeight = {}",
-                    blocks_decoded[i].height
-                );
-                pass2 = true;
-            }
+        let poc_ok = deadline_adj == blocks_decoded[i].deadline;
+        if  poc_ok{
+            println!(
+                "Deadline Validation Error detected, Height = {}",
+                blocks_decoded[i].height
+            );
         }
+        let mut pb = pb.lock().unwrap();
         pb.inc();
 
         // save scoop / deadline file
         let info = Info {
+            height: blocks_decoded[i].height,
             scoop: scoop as u64,
             deadline: deadline_adj,
             elapsed: blocks_decoded[i - 1].time - blocks_decoded[i].time,
+            gensig_ok,
+            poc_ok,
         };
 
         // export to csv
+        let mut wtr = wtr.lock().unwrap();
         wtr.serialize(info).expect("error deserialising block info");
     });
-    if !pass {
-        println!(
-            "Gensig Validation Error detected, EndHeight = {}",
-            blocks_decoded[blocks_decoded.len() - 1].height
-        );
-    }
-    if !pass2 {
-        println!(
-            "Deadline Validation Error detected, EndHeight = {}",
-            blocks_decoded[blocks_decoded.len() - 1].height
-        );
-    }
 
     println!("done.");
 }
