@@ -5,8 +5,8 @@ use pbr::ProgressBar;
 use rayon::prelude::*;
 use std::sync::{Arc, Mutex};
 
-#[serde(default)]
 #[derive(Serialize, Deserialize, Default, Debug)]
+#[serde(default)]
 pub struct Block {
     height: u64,
     time: u64,
@@ -20,8 +20,8 @@ pub struct Block {
     deadline: u64,
 }
 
-#[serde(default)]
 #[derive(Serialize, Deserialize, Default, Debug)]
+#[serde(default)]
 pub struct Info {
     height: u64,
     scoop: u64,

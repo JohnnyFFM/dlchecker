@@ -70,7 +70,7 @@ fn main() {
                     .short("w")
                     .long("wallet")
                     .value_name("wallet url")
-                    .help("wallet url including protocol and path (eg. https://burst.megash.it/burst) (optional)")
+                    .help("wallet url including protocol and path (eg. https://wallet.burstcoin.ro/burst) (optional)")
                     .required(false)
                     .takes_value(true),
             )

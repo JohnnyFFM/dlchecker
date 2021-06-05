@@ -2,8 +2,8 @@ extern crate jsonrpc;
 extern crate serde;
 use pbr::ProgressBar;
 
-#[serde(default)]
 #[derive(Serialize, Deserialize, Default)]
+#[serde(default)]
 pub struct Block {
     #[serde(skip_serializing)]
     hash: String,
